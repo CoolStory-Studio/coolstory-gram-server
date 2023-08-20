@@ -1,7 +1,8 @@
 #include "CSGServer/main.hpp"
 
 int main() {
-    std::cout << "Hello, world!" << std::endl;
+    logger::init(logger::debug, logger::cout);
+    LOGI << "Hello, world!";
 
     return 0;
 }
