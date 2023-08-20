@@ -20,5 +20,7 @@ FetchContent_MakeAvailable(json logger)
 
 include_directories(include)
 
-add_executable(coolstory_gram_server src/main.cpp)
-target_link_libraries(coolstory_gram_server PRIVATE nlohmann_json::nlohmann_json liblogger)
+add_executable(coolstory_gram_server
+		src/main.cpp
+		src/websocket_session.cpp)
+target_link_libraries(coolstory_gram_server PRIVATE nlohmann_json::nlohmann_json liblogger boost_coroutine)
