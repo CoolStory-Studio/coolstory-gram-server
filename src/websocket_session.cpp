@@ -23,10 +23,10 @@ void do_session(websocket::stream<beast::tcp_stream>& ws, net::yield_context yie
 
     // Accept the websocket handshake
     ws.async_accept(yield[ec]);
-    if(ec)
+    if (ec)
         return fail(ec, "accept");
 
-    for(;;)
+    for (;;)
     {
         // This buffer will hold the incoming message
         beast::flat_buffer buffer;
@@ -35,12 +35,12 @@ void do_session(websocket::stream<beast::tcp_stream>& ws, net::yield_context yie
         ws.async_read(buffer, yield[ec]);
 
         // This indicates that the session was closed
-        if(ec == websocket::error::closed) {
+        if (ec == websocket::error::closed) {
             LOGD << "Client closed the connection";
             break;
         }
 
-        if(ec)
+        if (ec)
             return fail(ec, "read");
 
         LOGD << "(" << ws.next_layer().socket().remote_endpoint() << "): " << beast::make_printable(buffer.data());
@@ -48,7 +48,7 @@ void do_session(websocket::stream<beast::tcp_stream>& ws, net::yield_context yie
         // Echo the message back
         ws.text(ws.got_text());
         ws.async_write(buffer.data(), yield[ec]);
-        if(ec)
+        if (ec)
             return fail(ec, "write");
     }
 }
@@ -59,39 +59,38 @@ void do_listen(net::io_context& ioc, tcp::endpoint endpoint, net::yield_context 
     // Open the acceptor
     tcp::acceptor acceptor(ioc);
     acceptor.open(endpoint.protocol(), ec);
-    if(ec)
+    if (ec)
         return fail(ec, "open");
 
     // Allow address reuse
     acceptor.set_option(net::socket_base::reuse_address(true), ec);
-    if(ec)
+    if (ec)
         return fail(ec, "set_option");
 
     // Bind to the server address
     acceptor.bind(endpoint, ec);
-    if(ec)
+    if (ec)
         return fail(ec, "bind");
 
     // Start listening for connections
     acceptor.listen(net::socket_base::max_listen_connections, ec);
-    if(ec)
+    if (ec)
         return fail(ec, "listen");
 
-    for(;;)
-    {
+    for (;;) {
         tcp::socket socket(ioc);
         acceptor.async_accept(socket, yield[ec]);
-        if(ec)
+        if (ec)
             fail(ec, "accept");
-        else
+        else {
             LOGD << "Connection accepted from " << socket.remote_endpoint();
             boost::asio::spawn(
                     acceptor.get_executor(),
                     std::bind(
                             &do_session,
-                            websocket::stream<
-                                    beast::tcp_stream>(std::move(socket)),
+                            websocket::stream<beast::tcp_stream>(std::move(socket)),
                             std::placeholders::_1));
+        }
     }
 }
 
@@ -110,11 +109,11 @@ void run(net::ip::address address, unsigned short port, int threads) {
     // Run the I/O service on the requested number of threads
     std::vector<std::thread> v;
     v.reserve(threads - 1);
-    for(auto i = threads - 1; i > 0; --i)
+    for (auto i = threads - 1; i > 0; --i) {
         v.emplace_back(
-                [&ioc]
-                {
+                [&ioc] {
                     ioc.run();
                 });
+    }
     ioc.run();
 }
